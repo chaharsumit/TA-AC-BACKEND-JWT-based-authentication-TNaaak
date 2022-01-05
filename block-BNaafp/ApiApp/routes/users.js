@@ -2,6 +2,7 @@ var express = require('express');
 var User = require('../models/User');
 var router = express.Router();
 
+
 /* GET users listing. */
 router.get('/', function(req, res, next) {
   res.send('respond with a resource');
@@ -10,8 +11,8 @@ router.get('/', function(req, res, next) {
 router.post('/register', async (req, res, next) => {
   try{
     let user = await User.create(req.body);
-    console.log(user);
-    res.status(201).json({ user });
+    let token = await user.signToken();
+    res.status(201).json({ user: user.userJSON(token) });
   }catch(error){
     next(error);
   }
@@ -31,7 +32,8 @@ router.post('/login', async (req, res, next) => {
     if(!result){
       return res.status(400).json({ error: "Incorrect Password!!" });
     }
-    res.status(201).json({ user });
+    let token = await user.signToken();
+    res.json({ user: user.userJSON(token) });
   }catch(error){
     next(error);
   }
