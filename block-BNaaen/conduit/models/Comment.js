@@ -1,5 +1,4 @@
 const mongoose = require('mongoose');
-const slug = require('slug');
 
 const Schema = mongoose.Schema;
 
