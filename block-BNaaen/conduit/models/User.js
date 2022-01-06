@@ -42,7 +42,7 @@ userSchema.methods.signToken = async function(){
   }
 }
 
-userSchema.methods.userJSON = async function(token){
+userSchema.methods.userJSON = function(token){
   return {
     userId: this.id,
     email: this.email,
@@ -50,6 +50,6 @@ userSchema.methods.userJSON = async function(token){
   }
 }
 
-mongoose.model('User', userSchema);
+let User = mongoose.model('User', userSchema);
 
 module.exports = User;

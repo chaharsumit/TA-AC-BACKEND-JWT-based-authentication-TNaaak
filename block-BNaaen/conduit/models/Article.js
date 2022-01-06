@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const slug = require('slug');
+const slugger = require('slug');
 
 const Schema = mongoose.Schema;
 
@@ -13,6 +13,11 @@ const articleSchema = new Schema({
   favouritesCount: { type: Number, default: 0 },
   author: { type: Schema.Types.ObjectId, ref: "User" }
 }, { timestamps: true });
+
+articleSchema.pre("save", async function(next){
+  this.slug = slugger(this.title);
+  next();
+})
 
 const Article = mongoose.model('Article', articleSchema);
 
