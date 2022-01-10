@@ -36,6 +36,24 @@ articleSchema.methods.articleJSON = function(favouriteArticles = []){
   }
 }
 
+articleSchema.methods.articleAltJSON = function(favouriteArticles = []){
+  if(favouriteArticles.includes(this.id)){
+    this.favourited = true;
+  }else{
+    this.favourited = false;
+  }
+  return {
+    slug: this.slug,
+    title: this.title,
+    description: this.description,
+    body: this.body,
+    tagList: this.tagList,
+    favourited: this.favourited,
+    favouritesCount: this.favouritesCount,
+    author: this.author
+  }
+}
+
 const Article = mongoose.model('Article', articleSchema);
 
 module.exports = Article;
