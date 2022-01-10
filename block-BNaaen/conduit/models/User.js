@@ -10,9 +10,9 @@ const userSchema = new Schema({
   bio: String,
   image: String,
   password: { type: String, required: true },
-  following: [{ type: String }],
-  followers: [{ type: String }],
-  favouriteArticles: [{ type: String }]
+  following: { type: Boolean, default: false },
+  followers: [{ type: Schema.Types.ObjectId, ref: "User" }],
+  favouriteArticles: [{ type: Schema.Types.ObjectId, ref: "Article" }]
 }, { timestamps: true });
 
 
@@ -25,7 +25,7 @@ userSchema.pre("save", async function(next){
 
 userSchema.methods.verifyPassword = async function(password){
   try{
-    let result = bcrypt.compare(password, this.password);
+    let result = await bcrypt.compare(password, this.password);
     return result;
   }catch(error){
     return error;
@@ -48,6 +48,26 @@ userSchema.methods.userJSON = function(token){
     email: this.email,
     token: token
   }
+}
+
+userSchema.methods.profileJSON = function(loggedUserId = null){
+  if(loggedUserId){
+    if(this.followers.includes(mongoose.Types.ObjectId(loggedUserId))){
+      this.following = true;
+    }else{
+      this.following = false;
+    }
+  }
+  return {
+    username: this.username,
+    email: this.email,
+    image: this.image,
+    following: this.following
+  }
+}
+
+userSchema.methods.followingCheck = async function(follower){
+  console.log(typeof(follower), typeof(this.followers[0]));
 }
 
 let User = mongoose.model('User', userSchema);
