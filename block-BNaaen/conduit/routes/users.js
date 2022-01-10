@@ -2,11 +2,12 @@ var express = require('express');
 const Article = require('../models/Article');
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
+const auth = require('../middlewares/auth');
 var router = express.Router();
 
 /* GET users listing. */
-router.get('/', function(req, res, next) {
-  res.send('respond with a resource');
+router.get('/', auth.verifyToken, function(req, res, next) {
+  res.send({ access: "Access Granted" });
 });
 
 router.post('/', async (req, res, next) => {

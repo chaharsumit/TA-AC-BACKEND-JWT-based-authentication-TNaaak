@@ -5,8 +5,11 @@ var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 var mongoose = require('mongoose');
 
+
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
+var profilesRouter = require('./routes/profiles');
+var articlesRouter = require('./routes/articles');
 
 mongoose.connect('mongodb://localhost/conduit', (err) => {
   console.log(err ? err : "Database connected successfully");
@@ -26,6 +29,8 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/api', indexRouter);
 app.use('/api/users', usersRouter);
+app.use('/api/profiles', profilesRouter);
+app.use('/api/articles', articlesRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

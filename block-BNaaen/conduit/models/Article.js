@@ -19,6 +19,23 @@ articleSchema.pre("save", async function(next){
   next();
 })
 
+articleSchema.methods.articleJSON = function(favouriteArticles = []){
+  if(favouriteArticles.includes(this.id)){
+    this.favourited = true;
+  }else{
+    this.favourited = false;
+  }
+  return {
+    slug: this.slug,
+    title: this.title,
+    description: this.description,
+    body: this.body,
+    tagList: this.tagList,
+    favourited: this.favourited,
+    favouritesCount: this.favouritesCount
+  }
+}
+
 const Article = mongoose.model('Article', articleSchema);
 
 module.exports = Article;
