@@ -6,6 +6,58 @@ const Comment = require('../models/Comment');
 const mongoose = require('mongoose');
 const router = express.Router();
 
+router.get('/', auth.optionalVerify, async (req, res, next) => {
+  // find and take queries
+  let tags, author, favourited;
+  let limit = 0;
+  let offset = 0;
+  let result = [];
+  if(req.query.limit){
+    limit = Number(req.query.limit);
+  }
+  if(req.query.offset){
+    offset = Number(req.query.offset);
+  }
+  try{
+    if(req.query.tag){
+      tags = req.query.tag;
+    }else{
+      tags = await Article.find({}).distinct('tagList');
+    }
+    if(req.query.author){
+      author = req.query.author;
+      var user = await User.findOne({ username: author });
+      var authorId = user.id;
+    }else{
+      var authorId = await Article.find({}).distinct('author');
+    }
+    if(!req.query.favourited){
+      if(typeof(authorId) === 'string'){
+        var articles = await Article.find({$and: [ {author: mongoose.Types.ObjectId(authorId)}, {tagList: {$in: tags}}]}).limit(limit).skip(offset);
+        articles.forEach(article => {
+          result.push(article.articleAltJSON(favouritedUser.favouriteArticles));
+        });
+        res.status(201).json({ result });
+      }else{
+        var articles = await Article.find({taglist: {$in: tags}}).limit(limit).skip(offset);
+        articles.forEach(article => {
+          result.push(article.articleAltJSON(favouritedUser.favouriteArticles));
+        });
+        res.status(201).json({ result });
+      }
+    }else{
+      var favouritedUser = await User.findOne({ username: req.query.favourited });
+      let articles = await Article.find({$and: [{author: mongoose.Types.ObjectId(authorId)}, {_id: { $in: favouritedUser.favouriteArticles }}, {tagList: {$in: tags}}]}).populate('author').limit(limit).skip(offset);
+      articles.forEach(article => {
+        result.push(article.articleAltJSON(favouritedUser.favouriteArticles));
+      });
+      res.status(201).json({ result });
+    }
+  }catch(error){
+    next(error);
+  }
+});
+
 router.post('/', auth.verifyToken, async (req, res, next) => {
   req.body.author = req.user.userId;
   try{
