@@ -4,6 +4,7 @@ const auth = require('../middlewares/auth');
 const User = require('../models/User');
 const Comment = require('../models/Comment');
 const mongoose = require('mongoose');
+const slugger = require('slug');
 const router = express.Router();
 
 router.get('/', auth.optionalVerify, async (req, res, next) => {
@@ -105,15 +106,20 @@ router.get('/:slug', async (req, res, next) => {
   }
 });
 
-/*
+
+//edit 
+
 router.put('/:slug', auth.verifyToken, async (req, res, next) => {
   let slug = req.params.slug;
   try{
     let article = await Article.findOne({ slug });
     let user = await User.findById(req.user.userId);
     if(article.author.toString() === user.id){
-      let updatedArticle = await Article.findOneAndUpdate({ slug }, req.body, { new: true });
-      res.status(201).json({ article: article.articleJSON(user.favouriteArticles) });
+      if(req.body.title){
+        req.body.slug = slugger(req.body.title);
+      }
+      let updatedArticle = await Article.findOneAndUpdate({ slug }, req.body, { new: true }).populate("author", "username _id email bio image");
+      res.status(201).json({ article: updatedArticle.articleAltJSON(user.favouriteArticles, req.user.followers) });
     }else{
       res.status(400).json({ error: "You are not the author of this article and can't modify it." });
     }
@@ -121,7 +127,6 @@ router.put('/:slug', auth.verifyToken, async (req, res, next) => {
     next(error);
   }
 });
-*/
 
 router.delete('/:slug', auth.verifyToken, async (req, res, next) => {
   let slug = req.params.slug;
@@ -144,7 +149,7 @@ router.delete('/:slug', auth.verifyToken, async (req, res, next) => {
 router.post('/:slug/favourite', auth.verifyToken, async (req, res, next) => {
   let slug = req.params.slug;
   try{
-    let favouritedArticle = await Article.findOne({ slug });
+    let favouritedArticle = await Article.findOneAndUpdate({ slug }, {$inc: {favouritesCount: 1}}, {new: true});
     let user = await User.findByIdAndUpdate(req.user.userId, { $push: {favouriteArticles: favouritedArticle.id } },{ new: true });
     res.status(201).json({ article: favouritedArticle.articleJSON(user.favouriteArticles) });
   }catch(error){
@@ -155,7 +160,7 @@ router.post('/:slug/favourite', auth.verifyToken, async (req, res, next) => {
 router.delete('/:slug/favourite', auth.verifyToken, async (req, res, next) => {
   let slug = req.params.slug;
   try{
-    let favouritedArticle = await Article.findOne({ slug });
+    let favouritedArticle = await Article.findOneAndUpdate({ slug }, {$inc: {favouritesCount: -1}}, {new: true});
     let user = await User.findByIdAndUpdate(req.user.userId, { $pull: {favouriteArticles: favouritedArticle.id } },{ new: true });
     res.status(201).json({ article: favouritedArticle.articleJSON(user.favouriteArticles) });
   }catch(error){
