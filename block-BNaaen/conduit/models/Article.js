@@ -36,11 +36,16 @@ articleSchema.methods.articleJSON = function(favouriteArticles = []){
   }
 }
 
-articleSchema.methods.articleAltJSON = function(favouriteArticles = []){
+articleSchema.methods.articleAltJSON = function(favouriteArticles = [], userFollowing = []){
   if(favouriteArticles.includes(this.id)){
     this.favourited = true;
   }else{
     this.favourited = false;
+  }
+  if(userFollowing.includes(this.author.id)){
+    this.author.following = true;
+  }else{
+    this.author.following = false;
   }
   return {
     slug: this.slug,
