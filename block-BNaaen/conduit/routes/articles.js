@@ -35,13 +35,13 @@ router.get('/', auth.optionalVerify, async (req, res, next) => {
       if(typeof(authorId) === 'string'){
         var articles = await Article.find({$and: [ {author: mongoose.Types.ObjectId(authorId)}, {tagList: {$in: tags}}]}).limit(limit).skip(offset);
         articles.forEach(article => {
-          result.push(article.articleAltJSON(favouritedUser.favouriteArticles));
+          result.push(article.articleAltJSON());
         });
         res.status(201).json({ result });
       }else{
         var articles = await Article.find({taglist: {$in: tags}}).limit(limit).skip(offset);
         articles.forEach(article => {
-          result.push(article.articleAltJSON(favouritedUser.favouriteArticles));
+          result.push(article.articleAltJSON());
         });
         res.status(201).json({ result });
       }
@@ -57,6 +57,24 @@ router.get('/', auth.optionalVerify, async (req, res, next) => {
     next(error);
   }
 });
+
+router.get('/feed', auth.verifyToken, async (req, res, next) => {
+  let id = req.user.userId;
+  let limit = offset = 0;
+  let result = [];
+  if(req.query.limit){
+    limit = Number(req.query.limit);
+  }
+  if(req.query.offset){
+    offset = Number(req.query.offset);
+  }
+  let followedUserIds = await User.find({followers: {$in: id}}).distinct('_id');
+  let articles = await Article.find({author: {$in: followedUserIds}}).populate("author").limit(limit).skip(offset);
+  articles.forEach(article => {
+    result.push(article.articleAltJSON(req.user.favouriteArticles, req.user.followers));
+  })
+  res.status(201).json({ result });
+})
 
 router.post('/', auth.verifyToken, async (req, res, next) => {
   req.body.author = req.user.userId;
