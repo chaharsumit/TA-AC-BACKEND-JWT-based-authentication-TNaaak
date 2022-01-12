@@ -27,6 +27,7 @@ module.exports = {
         let currUser = await User.findOne({ email: payload.email });
         req.user = payload;
         req.user.followers = currUser.followers;
+        req.user.favouriteArticles = currUser.favouriteArticles;
         next();
       }else{
         req.user = null;

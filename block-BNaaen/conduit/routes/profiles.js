@@ -24,12 +24,18 @@ router.get('/:username', auth.optionalVerify, async (req, res, next) => {
 router.post('/:username/follow', auth.verifyToken, async (req, res, next) => {
   let username = req.params.username;
   try{
-    let followedUser = await User.findOneAndUpdate({ username }, { $push: {followers: req.user.userId} }, {new: true});
-    console.log(followedUser.followers);
-    if(followedUser){
-      res.status(201).json({ profile: followedUser.profileJSON(req.user.userId) });
+    let userToFollow = await User.findOne({ username });
+    if(!userToFollow){
+      res.status(201).json({ error: 'No user found' });
+    }else if(req.user.userId === userToFollow.id.toString()){
+      return res.status(400).json({ error: "You can't follow/unfollow yourselves" });
     }else{
-      res.status(400).json({error: "This username doesn't exist"});
+      let followedUser = await User.findOneAndUpdate({ username }, { $push: {followers: req.user.userId} }, {new: true});
+      if(followedUser){
+        res.status(201).json({ profile: followedUser.profileJSON(req.user.userId) });
+      }else{
+        res.status(400).json({error: "This username doesn't exist"});
+      }
     }
   }catch(error){
     next(error);
@@ -39,11 +45,16 @@ router.post('/:username/follow', auth.verifyToken, async (req, res, next) => {
 router.post('/:username/unfollow', auth.verifyToken, async (req, res, next) => {
   let username = req.params.username;
   try{
-    let followedUser = await User.findOneAndUpdate({ username }, { $pull: {followers: req.user.userId} }, {new: true});
-    if(followedUser){
-      res.status(201).json({ profile: followedUser.profileJSON(req.user.userId) });
+    let userToFollow = await User.findOne({ username });
+    if(req.user.userId === userToFollow.id.toString()){
+      return res.status(400).json({ error: "You can't follow/unfollow yourselves" });
     }else{
-      res.status(400).json({error: "This username doesn't exist"});
+      let followedUser = await User.findOneAndUpdate({ username }, { $pull: {followers: req.user.userId} }, {new: true});
+      if(followedUser){
+        res.status(201).json({ profile: followedUser.profileJSON(req.user.userId) });
+      }else{
+        res.status(400).json({error: "This username doesn't exist"});
+      }
     }
   }catch(error){
     next(error);
