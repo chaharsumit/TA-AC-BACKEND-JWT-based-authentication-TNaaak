@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const slugger = require('slug');
+const randomString = require('randomstring');
 
 const Schema = mongoose.Schema;
 
@@ -9,16 +10,16 @@ const articleSchema = new Schema({
   description: String,
   body: String,
   tagList: [String],
-  favourited: { type: Boolean, default: false },
   favouritesCount: { type: Number, default: 0 },
   author: { type: Schema.Types.ObjectId, ref: "User" }
 }, { timestamps: true });
 
 articleSchema.pre("save", async function(next){
-  this.slug = slugger(this.title);
+  this.slug = slugger(this.title + ' ' + randomString.generate(3));
   next();
 })
 
+/*
 articleSchema.methods.articleJSON = function(favouriteArticles = []){
   if(favouriteArticles.includes(this.id)){
     this.favourited = true;
@@ -35,8 +36,10 @@ articleSchema.methods.articleJSON = function(favouriteArticles = []){
     favouritesCount: this.favouritesCount
   }
 }
+*/
 
-articleSchema.methods.articleAltJSON = function(favouriteArticles = [], userFollowing = []){
+articleSchema.methods.articleJSON = function(favouriteArticles = [], userFollowing = []){
+  let favourited = false;
   if(favouriteArticles.includes(this.id)){
     this.favourited = true;
   }else{
